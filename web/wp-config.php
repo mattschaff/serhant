@@ -58,17 +58,33 @@ if ( ! isset( $_ENV['PANTHEON_ENVIRONMENT'] ) ):
 	if ( isset( $_SERVER['HTTP_USER_AGENT_HTTPS'] ) && $_SERVER['HTTP_USER_AGENT_HTTPS'] == 'ON' ) {
 		$scheme = 'https';
 	}
-	$site_url = getenv( 'WP_HOME' ) !== false ? getenv( 'WP_HOME' ) : $scheme . '://' . $_SERVER['HTTP_HOST'] . '/';
-	define( 'WP_HOME', $site_url );
-	define( 'WP_SITEURL', $site_url . 'wp/' );
+	if (isset($_SERVER['HTTP_HOST'])) {
+		$site_url = getenv( 'WP_HOME' ) !== false ? getenv( 'WP_HOME' ) : $scheme . '://' . $_SERVER['HTTP_HOST'] . '/';
+		define( 'WP_HOME', $site_url );
+		define( 'WP_SITEURL', $site_url . 'wp/' );
+	}
 
 	/**
 	 * Set Database Details
 	 */
-	define( 'DB_NAME', getenv( 'DB_NAME' ) );
-	define( 'DB_USER', getenv( 'DB_USER' ) );
-	define( 'DB_PASSWORD', getenv( 'DB_PASSWORD' ) !== false ? getenv( 'DB_PASSWORD' ) : '' );
-	define( 'DB_HOST', getenv( 'DB_HOST' ) );
+	// Include docksal settings.php when appropriate.
+	if (isset($_SERVER['DOCKSAL_LOCAL'])) {
+		define( 'DB_NAME', getenv('MYSQL_DATABASE') );
+		define( 'DB_USER', getenv('MYSQL_USER') );
+		define( 'DB_PASSWORD', getenv('MYSQL_PASSWORD') );
+		define( 'DB_HOST', getenv('MYSQL_HOST') );
+		// Pass "https" protocol from reverse proxies
+		if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') {
+			$_SERVER['HTTPS'] = 'on';
+		}
+	}
+	else {
+		define( 'DB_NAME', getenv( 'DB_NAME' ) );
+		define( 'DB_USER', getenv( 'DB_USER' ) );
+		define( 'DB_PASSWORD', getenv( 'DB_PASSWORD' ) !== false ? getenv( 'DB_PASSWORD' ) : '' );
+		define( 'DB_HOST', getenv( 'DB_HOST' ) );
+	}
+
 
 	/**
 	 * Set debug modes
